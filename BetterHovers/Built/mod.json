@@ -1,0 +1,9 @@
+{
+  "Id": "aceba1.ttmm.hoverfix",
+  "DisplayName": "Better Hovers",
+  "Author": "Aceba1",
+  "Version": "2.0.0",
+  "Enable": true,
+  "AssemblyName": "BetterHovers.dll",
+  "EntryMethod": "BetterHovers.QPatch.PatchGame"
+}
