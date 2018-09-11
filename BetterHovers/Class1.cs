@@ -61,7 +61,7 @@ namespace BetterHovers
             if (flag)
             {
                 k_set = true;
-                k_LayerMask = LayerMask.GetMask("Terrain", "Water");
+                k_LayerMask = LayerMask.GetMask("Terrain", "Water", "Landmarks");
             }
             block = base.gameObject.GetComponent<TankBlock>();
             try
