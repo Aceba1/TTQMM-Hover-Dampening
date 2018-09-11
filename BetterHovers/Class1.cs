@@ -20,7 +20,7 @@ namespace BetterHovers
 
         private static class Patches
         {
-            [Harmony.HarmonyPatch(typeof(HoverJet), "OnSpawn")]
+            [Harmony.HarmonyPatch(typeof(HoverJet), "OnAttach")]
             private static class AddToBlock
             {
                 private static void Postfix(HoverJet __instance)
@@ -94,31 +94,38 @@ namespace BetterHovers
         // Token: 0x06000003 RID: 3 RVA: 0x0000214C File Offset: 0x0000034C
         private void FixedUpdate()
         {
-            bool flag = !block.tank;
-            if (!flag)
+            try
             {
-                for (int i = 0; i < hover.Length; i++)
+                bool flag = !block.tank;
+                if (!flag)
                 {
-                    Rigidbody rigidbody = (!block.tank) ? block.rbody : block.tank.rbody;
-                    Vector3 vector = rigidbody.position + (block.transform.position - rigidbody.transform.position);
-                    Ray ray = new Ray(vector - hover[i].effector.forward * hover[i].jetRadius, hover[i].effector.forward);
-                    RaycastHit raycastHit;
-                    bool flag2 = Physics.SphereCast(ray, hover[i].jetRadius, out raycastHit, hover[i].forceRangeMax, k_LayerMask);
-                    if (flag2)
+                    for (int i = 0; i < hover.Length; i++)
                     {
-                        float distance = raycastHit.distance;
-                        float num = lastdist[i] - distance;
-                        num *= Strength;
-                        num = Mathf.Min(num, hover[i].forceMax * ForceMax);
-                        num = Mathf.Max(hover[i].forceMax * ForceMin, num);
-                        rigidbody.AddForceAtPosition(-hover[i].effector.forward * num, vector);
-                        lastdist[i] = distance;
-                    }
-                    else
-                    {
-                        lastdist[i] = hover[i].forceRangeMax;
+                        Rigidbody rigidbody = (!block.tank) ? block.rbody : block.tank.rbody;
+                        Vector3 vector = rigidbody.position + (block.transform.position - rigidbody.transform.position);
+                        Ray ray = new Ray(vector - hover[i].effector.forward * hover[i].jetRadius, hover[i].effector.forward);
+                        RaycastHit raycastHit;
+                        bool flag2 = Physics.SphereCast(ray, hover[i].jetRadius, out raycastHit, hover[i].forceRangeMax, k_LayerMask);
+                        if (flag2)
+                        {
+                            float distance = raycastHit.distance;
+                            float num = lastdist[i] - distance;
+                            num *= Strength;
+                            num = Mathf.Min(num, hover[i].forceMax * ForceMax);
+                            num = Mathf.Max(hover[i].forceMax * ForceMin, num);
+                            rigidbody.AddForceAtPosition(-hover[i].effector.forward * num, vector);
+                            lastdist[i] = distance;
+                        }
+                        else
+                        {
+                            lastdist[i] = hover[i].forceRangeMax;
+                        }
                     }
                 }
+            }
+            catch
+            {
+
             }
         }
 
