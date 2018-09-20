@@ -25,7 +25,7 @@ namespace BetterHovers
             {
                 private static void Postfix(HoverJet __instance)
                 {
-                    HoverJetAim.AttachToBlock(__instance.gameObject);
+                    HoverJetAim.AttachToBlock(__instance);
                 }
             }
         }
@@ -49,16 +49,17 @@ namespace BetterHovers
     public class HoverJetAim : MonoBehaviour
     {
         // Token: 0x06000001 RID: 1 RVA: 0x00002050 File Offset: 0x00000250
-        public static void AttachToBlock(GameObject gameObject)
+        public static void AttachToBlock(HoverJet gameObject)
         {
-            gameObject.AddComponent<HoverJetAim>();
+            var thing = gameObject.gameObject.AddComponent<HoverJetAim>();
+            if (thing != null) thing.hover = gameObject;
         }
 
-        // Token: 0x06000002 RID: 2 RVA: 0x0000205C File Offset: 0x0000025C
+        TankBlock block;
+
         public void Start()
         {
-            bool flag = !k_set;
-            if (flag)
+            if (!k_set)
             {
                 k_set = true;
                 k_LayerMask = LayerMask.GetMask("Terrain", "Water", "Landmarks");
@@ -77,12 +78,6 @@ namespace BetterHovers
                 {
                     Debug.Log("Config is missing type for " + block.BlockType.ToString() + "!");
                 }
-                HoverJet[] components = gameObject.GetComponents<HoverJet>();
-                HoverJet[] componentsInChildren = base.gameObject.GetComponentsInChildren<HoverJet>();
-                hover = new HoverJet[components.Length + componentsInChildren.Length];
-                lastdist = new float[hover.Length];
-                components.CopyTo(hover, 0);
-                componentsInChildren.CopyTo(hover, components.Length);
             }
             catch
             {
@@ -96,30 +91,21 @@ namespace BetterHovers
         {
             try
             {
-                bool flag = !block.tank;
-                if (!flag)
+                if (block.tank)
                 {
-                    for (int i = 0; i < hover.Length; i++)
+                    Rigidbody rigidbody = (!block.tank) ? block.rbody : block.tank.rbody;
+                    Vector3 vector = rigidbody.position + (hover.effector.position - rigidbody.transform.position);
+                    Ray ray = new Ray(vector - hover.effector.forward * hover.jetRadius, hover.effector.forward);
+                    RaycastHit raycastHit;
+                    if (Physics.SphereCast(ray, hover.jetRadius, out raycastHit, hover.forceRangeMax, k_LayerMask))
                     {
-                        Rigidbody rigidbody = (!block.tank) ? block.rbody : block.tank.rbody;
-                        Vector3 vector = rigidbody.position + (block.transform.position - rigidbody.transform.position);
-                        Ray ray = new Ray(vector - hover[i].effector.forward * hover[i].jetRadius, hover[i].effector.forward);
-                        RaycastHit raycastHit;
-                        bool flag2 = Physics.SphereCast(ray, hover[i].jetRadius, out raycastHit, hover[i].forceRangeMax, k_LayerMask);
-                        if (flag2)
-                        {
-                            float distance = raycastHit.distance;
-                            float num = lastdist[i] - distance;
-                            num *= Strength;
-                            num = Mathf.Min(num, hover[i].forceMax * ForceMax);
-                            num = Mathf.Max(hover[i].forceMax * ForceMin, num);
-                            rigidbody.AddForceAtPosition(-hover[i].effector.forward * num, vector);
-                            lastdist[i] = distance;
-                        }
-                        else
-                        {
-                            lastdist[i] = hover[i].forceRangeMax;
-                        }
+                        float distance = raycastHit.distance;
+                        float num = lastdist - distance;
+                        num *= Strength;
+                        num = Mathf.Min(num, hover.forceMax * ForceMax);
+                        num = Mathf.Max(hover.forceMax * ForceMin, num);
+                        rigidbody.AddForceAtPosition(-hover.effector.forward * num, vector);
+                        lastdist = distance;
                     }
                 }
             }
@@ -129,20 +115,10 @@ namespace BetterHovers
             }
         }
 
-        // Token: 0x04000001 RID: 1
         private static int k_LayerMask;
-
-        // Token: 0x04000002 RID: 2
         private static bool k_set = false;
-
-        // Token: 0x04000003 RID: 3
-        private HoverJet[] hover;
-
-        // Token: 0x04000004 RID: 4
-        private float[] lastdist;
-
-        // Token: 0x04000005 RID: 5
-        private TankBlock block;
+        private HoverJet hover;
+        private float lastdist;
 
         public float Strength = 1000f, ForceMin = -5f, ForceMax = 15f;
     }
