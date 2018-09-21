@@ -14,7 +14,18 @@ namespace BetterHovers
         {
             var hinst = Harmony.HarmonyInstance.Create("aceba1.ttmm.hoverfix");
             hinst.PatchAll(System.Reflection.Assembly.GetExecutingAssembly());
-            
+            string path = System.IO.Path.Combine(System.Reflection.Assembly.GetExecutingAssembly().Location, "..\\config.json");
+            if (!System.IO.File.Exists(path))
+            {
+                try
+                {
+                    System.IO.File.Copy(System.IO.Path.Combine(System.Reflection.Assembly.GetExecutingAssembly().Location, "..\\example.json"), path);
+                }
+                catch
+                {
+
+                }
+            }
             config = new ModConfig();
         }
 
@@ -43,6 +54,7 @@ namespace BetterHovers
             return QPatch.config.GetConfigDeep<HoverType>(blockType.ToString());
         }
         public float strength, minForce, maxForce;
+        public int layerMask;
     }
 
     // Token: 0x02000002 RID: 2
@@ -64,7 +76,8 @@ namespace BetterHovers
                 k_set = true;
                 k_LayerMask = LayerMask.GetMask("Terrain", "Water", "Landmarks");
             }
-            block = base.gameObject.GetComponent<TankBlock>();
+            layerMask = k_LayerMask;
+            block = base.gameObject.GetComponentInParent<TankBlock>();
             try
             {
                 try
@@ -73,6 +86,8 @@ namespace BetterHovers
                     Strength = hoverType.strength;
                     ForceMin = hoverType.minForce;
                     ForceMax = hoverType.maxForce;
+                    if (hoverType.layerMask != 0)
+                        layerMask = hoverType.layerMask;
                 }
                 catch
                 {
@@ -119,7 +134,7 @@ namespace BetterHovers
         private static bool k_set = false;
         private HoverJet hover;
         private float lastdist;
-
+        private int layerMask;
         public float Strength = 1000f, ForceMin = -5f, ForceMax = 15f;
     }
 }
