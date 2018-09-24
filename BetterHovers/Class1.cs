@@ -83,7 +83,7 @@ namespace BetterHovers
             if (!k_set)
             {
                 k_set = true;
-                k_LayerMask = LayerMask.GetMask("Terrain", "Water", "Landmarks");
+                k_LayerMask = LayerMask.GetMask("Terrain", "Water", "Landmarks") & (int)typeof(HoverJet).GetField("k_LayerIgnoreMask", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null);
             }
             layerMask = k_LayerMask;
             block = base.gameObject.GetComponentInParent<TankBlock>();
@@ -95,10 +95,6 @@ namespace BetterHovers
                     Strength = hoverType.strength;
                     ForceMin = hoverType.minForce;
                     ForceMax = hoverType.maxForce;
-                    if (hoverType.layerMask == -1)
-                    {
-                        layerMask = 
-                    }
                     if (hoverType.layerMask != 0)
                         layerMask = hoverType.layerMask;
                     if (hoverType.extraDistance != 0f)
