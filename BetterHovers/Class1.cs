@@ -79,6 +79,7 @@ namespace BetterHovers
 
         public void Start()
         {
+            heart = Heart;
             if (!k_set)
             {
                 k_set = true;
@@ -94,6 +95,10 @@ namespace BetterHovers
                     Strength = hoverType.strength;
                     ForceMin = hoverType.minForce;
                     ForceMax = hoverType.maxForce;
+                    if (hoverType.layerMask == -1)
+                    {
+                        layerMask = 
+                    }
                     if (hoverType.layerMask != 0)
                         layerMask = hoverType.layerMask;
                     if (hoverType.extraDistance != 0f)
@@ -118,7 +123,6 @@ namespace BetterHovers
         {
             if (Heart != heart)
             {
-                heart = Heart;
                 Start();
                 return;
             }
@@ -136,7 +140,7 @@ namespace BetterHovers
                         if (lastdist != -1f)
                         {
                             float difference = lastdist - distance;
-                            difference = (1f / (distance + 0.5f)) * difference + difference;
+                            difference = (2.5f / (distance + 0.1f)) * difference + difference;
                             difference *= Strength;
                             difference = Mathf.Min(difference, hover.forceMax * ForceMax);
                             difference = Mathf.Max(hover.forceMax * ForceMin, difference);
@@ -144,10 +148,8 @@ namespace BetterHovers
                             rigidbody.AddForceAtPosition(-hover.effector.forward * difference, vector);
                         }
                         lastdist = distance;
+                        return;
                     }
-                }
-                else
-                {
                     lastdist = -1;
                 }
             }
