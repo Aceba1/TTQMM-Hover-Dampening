@@ -27,6 +27,13 @@ namespace BetterHovers
                 }
             }
             config = new ModConfig();
+            config.UpdateConfig += UpdateConfig;
+        }
+
+        public static void UpdateConfig()
+        {
+            HoverType.cachedHovers.Clear();
+            HoverJetAim.Heart = !HoverJetAim.Heart;
         }
 
         private static class Patches
@@ -55,6 +62,7 @@ namespace BetterHovers
         }
         public float strength, minForce, maxForce;
         public int layerMask;
+        public float extraDistance;
     }
 
     // Token: 0x02000002 RID: 2
@@ -88,6 +96,8 @@ namespace BetterHovers
                     ForceMax = hoverType.maxForce;
                     if (hoverType.layerMask != 0)
                         layerMask = hoverType.layerMask;
+                    if (hoverType.extraDistance != 0f)
+                        ExtraDistance =  hoverType.extraDistance + 1f;
                 }
                 catch
                 {
@@ -101,9 +111,17 @@ namespace BetterHovers
             }
         }
 
+
+
         // Token: 0x06000003 RID: 3 RVA: 0x0000214C File Offset: 0x0000034C
         private void FixedUpdate()
         {
+            if (Heart != heart)
+            {
+                heart = Heart;
+                Start();
+                return;
+            }
             try
             {
                 if (block.tank)
@@ -112,16 +130,25 @@ namespace BetterHovers
                     Vector3 vector = rigidbody.position + (hover.effector.position - rigidbody.transform.position);
                     Ray ray = new Ray(vector - hover.effector.forward * hover.jetRadius, hover.effector.forward);
                     RaycastHit raycastHit;
-                    if (Physics.SphereCast(ray, hover.jetRadius, out raycastHit, hover.forceRangeMax, k_LayerMask))
+                    if (Physics.SphereCast(ray, hover.jetRadius, out raycastHit, hover.forceRangeMax * ExtraDistance, k_LayerMask))
                     {
                         float distance = raycastHit.distance;
-                        float num = lastdist - distance;
-                        num *= Strength;
-                        num = Mathf.Min(num, hover.forceMax * ForceMax);
-                        num = Mathf.Max(hover.forceMax * ForceMin, num);
-                        rigidbody.AddForceAtPosition(-hover.effector.forward * num, vector);
+                        if (lastdist != -1f)
+                        {
+                            float difference = lastdist - distance;
+                            difference = (1f / (distance + 0.5f)) * difference + difference;
+                            difference *= Strength;
+                            difference = Mathf.Min(difference, hover.forceMax * ForceMax);
+                            difference = Mathf.Max(hover.forceMax * ForceMin, difference);
+
+                            rigidbody.AddForceAtPosition(-hover.effector.forward * difference, vector);
+                        }
                         lastdist = distance;
                     }
+                }
+                else
+                {
+                    lastdist = -1;
                 }
             }
             catch
@@ -132,9 +159,11 @@ namespace BetterHovers
 
         private static int k_LayerMask;
         private static bool k_set = false;
+        public static bool Heart = true;
+        private bool heart = true;
         private HoverJet hover;
         private float lastdist;
         private int layerMask;
-        public float Strength = 1000f, ForceMin = -5f, ForceMax = 15f;
+        public float Strength = 1000f, ForceMin = -5f, ForceMax = 15f, ExtraDistance = 1.25f;
     }
 }
